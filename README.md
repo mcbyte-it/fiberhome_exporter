@@ -46,4 +46,5 @@ In prometheus.yml file, add the following section to allow data scraping from th
 ```  - job_name: 'fiberhome-exporter'
     scrape_interval: 15s
     static_configs:
-      - targets: ['fiberhome_exporter:6145']```
+      - targets: ['fiberhome_exporter:6145']
+```

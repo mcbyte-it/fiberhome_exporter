@@ -32,7 +32,7 @@ version: "3"
 
 services:
   fiberhome_exporter:
-    image: fiberhome_exporter:latest
+    image: mcbyteit/fiberhome_exporter:latest
     environment:
       HOSTNAME: 'http://192.168.1.1'
       USERNAME: 'admin'

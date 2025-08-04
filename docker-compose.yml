@@ -6,8 +6,8 @@ services:
     container_name: fiberhome_exporter
     environment:
       HOSTNAME: 'http://192.168.1.1'
-      USERNAME: 'admin'
-      PASSWORD: 'admin1234'
+      USERNAME: 'root'
+      PASSWORD: 'admin'
     ports:
       - 6145:6145
     restart: unless-stopped

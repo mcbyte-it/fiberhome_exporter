@@ -1,4 +1,3 @@
 prometheus_client
 requests
 pycryptodome
-Flask

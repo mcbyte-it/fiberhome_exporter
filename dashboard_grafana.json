@@ -2,7 +2,7 @@
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
-      "label": "prometheus",
+      "label": "prometheus-ds",
       "description": "",
       "type": "datasource",
       "pluginId": "prometheus",
@@ -75,7 +75,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "description": "",
       "fieldConfig": {
@@ -138,52 +138,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "dsType": "prometheus",
           "editorMode": "code",
           "exemplar": false,
-          "expr": "(fiberhome_uptime_seconds_total)",
+          "expr": "router_uptime",
           "format": "time_series",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            }
-          ],
           "instant": true,
           "interval": "",
           "legendFormat": "",
-          "measurement": "",
-          "orderByTime": "ASC",
-          "policy": "default",
           "range": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "type_instance",
-              "operator": "=",
-              "value": "uptime"
-            }
-          ],
-          "target": ""
+          "refId": "A"
         }
       ],
       "title": "Fiberhome Uptime",
@@ -193,7 +159,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -240,13 +206,13 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "fiberhome_uptime_seconds_total{modelname=\"HG6145F\"}",
+          "expr": "router_uptime",
           "instant": true,
-          "legendFormat": "Fiberhome {{ modelname }}",
+          "legendFormat": "Fiberhome HG6145F",
           "range": false,
           "refId": "A"
         }
@@ -257,7 +223,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -369,26 +335,22 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
-          "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "increase(fiberhome_pon_bytes_total{direction=\"rx\"}[$__interval])",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
+          "expr": "increase(router_pon_bytes_received_total[$__interval])",
           "instant": false,
           "legendFormat": "Download",
           "range": true,
-          "refId": "A",
-          "useBackend": false
+          "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "increase(fiberhome_pon_bytes_total{direction=\"tx\"}[$__interval])",
+          "expr": "increase(router_pon_bytes_sent_total[$__interval])",
           "hide": false,
           "instant": false,
           "legendFormat": "Upload",
@@ -402,7 +364,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -449,13 +411,13 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "fiberhome_uptime_seconds_total{modelname=\"HG6145F\"}",
+          "expr": "router_uptime",
           "instant": true,
-          "legendFormat": "{{ softwareversion }}",
+          "legendFormat": "N/A",
           "range": false,
           "refId": "A"
         }
@@ -466,7 +428,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -514,14 +476,26 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "sum(increase(fiberhome_pon_bytes_total[24h])) without(pod, instance)",
+          "expr": "increase(router_pon_bytes_received_total[24h])",
           "instant": false,
-          "legendFormat": "{{direction}}",
+          "legendFormat": "Download",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "code",
+          "expr": "increase(router_pon_bytes_sent_total[24h])",
+          "instant": false,
+          "legendFormat": "Upload",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Transfer last 24h",
@@ -530,7 +504,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -578,14 +552,26 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "sum(increase(fiberhome_pon_bytes_total[7d])) without(pod, instance)",
+          "expr": "increase(router_pon_bytes_received_total[7d])",
           "instant": false,
-          "legendFormat": "{{direction}}",
+          "legendFormat": "Download",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "code",
+          "expr": "increase(router_pon_bytes_sent_total[7d])",
+          "instant": false,
+          "legendFormat": "Upload",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Transfer last 7d",
@@ -594,7 +580,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -642,14 +628,26 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "sum(increase(fiberhome_pon_bytes_total[30d])) without(pod, instance)",
+          "expr": "increase(router_pon_bytes_received_total[30d])",
           "instant": false,
-          "legendFormat": "{{direction}}",
+          "legendFormat": "Download",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "code",
+          "expr": "increase(router_pon_bytes_sent_total[30d])",
+          "instant": false,
+          "legendFormat": "Upload",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Transfer last 30d",
@@ -658,7 +656,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -738,14 +736,26 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "avg(irate(fiberhome_pon_bytes_total[10m])) without(pod,instance)",
+          "expr": "irate(router_pon_bytes_received_total[10m])",
           "instant": false,
-          "legendFormat": "{{direction}}",
+          "legendFormat": "Download",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "code",
+          "expr": "irate(router_pon_bytes_sent_total[10m])",
+          "instant": false,
+          "legendFormat": "Upload",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Bytes/s",
@@ -754,7 +764,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -802,14 +812,26 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "sum(increase(fiberhome_pon_bytes_total[365d])) without(pod, instance)",
+          "expr": "increase(router_pon_bytes_received_total[365d])",
           "instant": false,
-          "legendFormat": "{{direction}}",
+          "legendFormat": "Download",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "code",
+          "expr": "increase(router_pon_bytes_sent_total[365d])",
+          "instant": false,
+          "legendFormat": "Upload",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Transfer last 1y",
@@ -831,7 +853,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -911,27 +933,27 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "(fiberhome_power{direction=\"rx\"})",
+          "expr": "router_rx_power",
           "instant": false,
-          "legendFormat": "Received Power\t",
+          "legendFormat": "Received Power",
           "range": true,
           "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "(fiberhome_power{direction=\"tx\"})",
+          "expr": "router_tx_power",
           "hide": false,
           "instant": false,
-          "legendFormat": "Transmitted Power\t",
+          "legendFormat": "Transmitted Power",
           "range": true,
           "refId": "B"
         }
@@ -942,7 +964,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -1035,36 +1057,28 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
-          "disableTextWrap": false,
-          "editorMode": "builder",
+          "editorMode": "code",
           "exemplar": true,
-          "expr": "fiberhome_cpu_usage",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
+          "expr": "router_cpu_usage",
           "instant": false,
           "legendFormat": "CPU usage",
           "range": true,
-          "refId": "A",
-          "useBackend": false
+          "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "fiberhome_transceiver_temperature",
-          "fullMetaSearch": false,
+          "editorMode": "code",
+          "expr": "router_transceiver_temperature",
           "hide": false,
-          "includeNullMetadata": true,
           "instant": false,
           "legendFormat": "Operating Temperature",
           "range": true,
-          "refId": "B",
-          "useBackend": false
+          "refId": "B"
         }
       ],
       "title": "CPU usage & Temperature",
@@ -1073,7 +1087,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -1187,10 +1201,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "(fiberhome_memory_total_bytes - fiberhome_memory_free_bytes)",
+          "expr": "(router_mem_total - router_mem_free) * 1024",
           "hide": false,
           "instant": false,
           "legendFormat": "Used memory",
@@ -1200,10 +1214,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-ds"
           },
           "editorMode": "code",
-          "expr": "fiberhome_memory_free_bytes",
+          "expr": "router_mem_free * 1024",
           "hide": false,
           "instant": false,
           "legendFormat": "Free memory",
@@ -1241,6 +1255,6 @@
   "timezone": "",
   "title": "Fiberhome HG6145F",
   "uid": "ece54daf-56e7-4bbb-ba1e-5b87e952b9ad",
-  "version": 19,
+  "version": 20,
   "weekStart": ""
 }

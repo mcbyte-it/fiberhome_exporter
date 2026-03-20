@@ -28,15 +28,14 @@ To run this image I used a docker-compose file.
 **Be sure to set the environmental variables as in the compose file below**
 
 ```
-version: "3"
-
 services:
   fiberhome_exporter:
     image: mcbyteit/fiberhome_exporter:latest
     environment:
-      HOSTNAME: 'http://192.168.1.1'
-      USERNAME: 'admin'
-      PASSWORD: 'admin1234'
+      ROUTER_IP: 'http://192.168.1.1'
+      ROUTER_USERNAME: 'admin'
+      ROUTER_PASSWORD: 'admin1234'
+      ROUTER_ACS_RANDOM: '(your_acs_random_here)'
     ports:
       - 6145:6145
     restart: unless-stopped

@@ -2,9 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags: ["v*"]
 
 jobs:
 
@@ -29,4 +27,4 @@ jobs:
         push: ${{ github.event_name == 'push' }}
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/fiberhome_exporter:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/fiberhome_exporter:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/fiberhome_exporter:${{ github.ref_name }}

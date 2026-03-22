@@ -6,6 +6,8 @@ The exporter should work with the HG6145F devices, possibiliy some other models 
 
 It has been tested against my own FiberHome HG6145F, running from within a Docker container and connected to Prometheus for data collection. Data visualization has been done with Grafana.
 
+[![Grafana Dashboard Screenshot](docs/grafana_screenshot.jpg)](docs/grafana_screenshot.jpg).jpg
+
 ## Build
 
 To use and build this exporter, you need to first clone this reposiroty and create a docker image from the sources

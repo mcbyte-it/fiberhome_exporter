@@ -39,9 +39,6 @@ GET_LOGIN_USER_URL = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_login_user"
 IS_LOGINED_URL     = f"{ROUTER_IP}/cgi-bin/is_logined.cgi"
 USERNAME           = os.getenv("ROUTER_USERNAME",   "admin")
 PASSWORD           = os.getenv("ROUTER_PASSWORD",   "admin1234")
-# ACS_RANDOM is fetched by the router login page and used as the AES key source.
-# key = ACS_RANDOM[6:22]. See authentication.md for details.
-ACS_RANDOM         = os.getenv("ROUTER_ACS_RANDOM", "")
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
@@ -74,6 +71,18 @@ def _req(method, url, **kwargs):
         log.error(f"Request failed: {method} {url} — {type(e).__name__}: {e}")
         raise
 
+ACS_RANDOM_URL = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_acs_random"
+
+def fetch_acs_random():
+    resp = _req("GET", f"{ACS_RANDOM_URL}&_={random.random()}")
+    if resp.status_code != 200:
+        raise RuntimeError(f"get_acs_random failed: HTTP {resp.status_code}")
+    acs_random = resp.json().get("acsRandom")
+    if not acs_random:
+        raise RuntimeError(f"get_acs_random response missing acsRandom field: {resp.text}")
+    log.info(f"Fetched acs_random from router")
+    return acs_random
+
 def get_router_data():
     # Check if existing session cookie is still valid
     resp = _req("GET", f"{STATUS_URL}{random.random()}",
@@ -84,6 +93,9 @@ def get_router_data():
             return result
 
     log.info("Session expired — re-authenticating")
+
+    # Fetch AES key source from router (unauthenticated endpoint)
+    acs_random = fetch_acs_random()
 
     # Get session ID for login
     resp = _req("GET", f"{GET_LOGIN_USER_URL}&_={random.random()}")
@@ -96,7 +108,7 @@ def get_router_data():
     resp = _req("POST", LOGIN_URL,
                 data={
                     "username":   USERNAME,
-                    "loginpd":    fhencrypt(PASSWORD, ACS_RANDOM),
+                    "loginpd":    fhencrypt(PASSWORD, acs_random),
                     "port":       "0",
                     "sessionid":  sessionid,
                     "ajaxmethod": "do_login",

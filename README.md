@@ -35,7 +35,6 @@ services:
       ROUTER_IP: 'http://192.168.1.1'
       ROUTER_USERNAME: 'admin'
       ROUTER_PASSWORD: 'admin1234'
-      ROUTER_ACS_RANDOM: '(your_acs_random_here)'
     ports:
       - 6145:6145
     restart: unless-stopped

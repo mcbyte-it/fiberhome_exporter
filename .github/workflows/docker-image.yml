@@ -28,3 +28,8 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/fiberhome_exporter:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/fiberhome_exporter:${{ github.ref_name }}
+        build-args: |
+          VERSION=${{ github.ref_name }}
+          REVISION=${{ github.sha }}
+          CREATED=${{ github.event.head_commit.timestamp }}
+          SOURCE=https://github.com/${{ github.repository }}

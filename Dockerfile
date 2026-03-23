@@ -1,6 +1,15 @@
 FROM python:3-alpine
 
-LABEL Name=fiberhome_exporter
+ARG VERSION=dev
+ARG REVISION=unknown
+ARG CREATED=unknown
+ARG SOURCE=https://github.com/mcbyute-it/fiberhome_exporter
+
+LABEL Name=fiberhome_exporter \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.source=$SOURCE \
+      org.opencontainers.image.created=$CREATED
 
 ENV PIP_NO_CACHE_DIR="true" \
     PYTHONPATH="/code"

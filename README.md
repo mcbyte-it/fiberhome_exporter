@@ -8,6 +8,14 @@ It has been tested against my own FiberHome HG6145F, running from within a Docke
 
 [![Grafana Dashboard Screenshot](docs/grafana_screenshot.jpg)](docs/grafana_screenshot.jpg).jpg
 
+## Purpose & Disclaimer
+
+This project was born out of a personal necessity: I wanted to collect statistics from the fiber router I use at home. There is no malicious intent whatsoever — no hacking, no exploitation, no reverse engineering of any firmware.
+
+The exporter was built after observing the network calls the router's own web UI makes to its local JSON API, then replicating those calls to collect statistics. During that process I had the opportunity to understand how the login flow works, but nothing is being exploited — credentials are only used to authenticate exactly as a browser would. The router password cannot be changed through this tool, and no firmware was reverse engineered.
+
+If you are looking for a way to monitor your FiberHome router with Prometheus and Grafana, this is the right tool. If you are looking for a hacking or exploitation tool, this is not it.
+
 ## Build
 
 To use and build this exporter, you need to first clone this reposiroty and create a docker image from the sources

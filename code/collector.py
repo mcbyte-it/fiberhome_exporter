@@ -37,6 +37,9 @@ LOGIN_URL          = f"{ROUTER_IP}/cgi-bin/ajax"
 STATUS_URL         = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_base_info&_="
 GET_LOGIN_USER_URL = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_login_user"
 IS_LOGINED_URL     = f"{ROUTER_IP}/cgi-bin/is_logined.cgi"
+ETHERNET_URL       = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=getEthernetPorts_info&_="
+WAN_URL            = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_allwan_info&_="
+LAN_URL            = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_lan_status&_="
 USERNAME           = os.getenv("ROUTER_USERNAME",   "admin")
 PASSWORD           = os.getenv("ROUTER_PASSWORD",   "admin1234")
 
@@ -72,6 +75,10 @@ def _req(method, url, **kwargs):
         raise
 
 ACS_RANDOM_URL = f"{ROUTER_IP}/cgi-bin/ajax?ajaxmethod=get_acs_random"
+
+def _fix_ip(s):
+    """Router encodes IPs as '192_point_168_point_1_point_1' — decode to normal."""
+    return s.replace("_point_", ".")
 
 def fetch_acs_random():
     resp = _req("GET", f"{ACS_RANDOM_URL}&_={random.random()}")
@@ -147,6 +154,47 @@ def get_router_data():
     log.info("Re-authentication successful")
     return result
 
+def fetch_ethernet_ports():
+    """Return list of per-port dicts from getEthernetPorts_info, or []."""
+    try:
+        resp = _req("GET", f"{ETHERNET_URL}{random.random()}",
+                    headers={"Referer": f"{ROUTER_IP}/html/stateOverview_inter.html"})
+        if resp.status_code != 200:
+            log.warning(f"getEthernetPorts_info failed: HTTP {resp.status_code}")
+            return []
+        return resp.json().get("ethernet_ports_info", {}).get("ethernet_ports_data", [])
+    except Exception:
+        log.error(f"Exception fetching ethernet ports:\n{traceback.format_exc()}")
+        return []
+
+def fetch_wan_info():
+    """Return list of INTERNET WAN dicts from get_allwan_info, or []."""
+    try:
+        resp = _req("GET", f"{WAN_URL}{random.random()}",
+                    headers={"Referer": f"{ROUTER_IP}/html/stateOverview_inter.html"})
+        if resp.status_code != 200:
+            log.warning(f"get_allwan_info failed: HTTP {resp.status_code}")
+            return []
+        wan_list = resp.json().get("wan", [])
+        return [w for w in wan_list if "INTERNET" in w.get("ServiceList", "")]
+    except Exception:
+        log.error(f"Exception fetching WAN info:\n{traceback.format_exc()}")
+        return []
+
+def fetch_lan_clients():
+    """Return count of active LAN clients from get_lan_status, or None."""
+    try:
+        resp = _req("GET", f"{LAN_URL}{random.random()}",
+                    headers={"Referer": f"{ROUTER_IP}/html/stateOverview_inter.html"})
+        if resp.status_code != 200:
+            log.warning(f"get_lan_status failed: HTTP {resp.status_code}")
+            return None
+        clients = resp.json().get("lan_status", {}).get("data", [])
+        return len(clients)
+    except Exception:
+        log.error(f"Exception fetching LAN status:\n{traceback.format_exc()}")
+        return None
+
 # ── Custom Collector (called on every scrape) ─────────────────────────────────
 class RouterCollector:
     def collect(self):
@@ -160,17 +208,84 @@ class RouterCollector:
             log.warning("No data returned — skipping scrape")
             return
 
+        # ── Existing base_info metrics ────────────────────────────────────────
         yield GaugeMetricFamily("router_uptime",                  "Router uptime in seconds",             value=float(data.get("uptime", 0)))
         yield GaugeMetricFamily("router_mem_total",               "Total memory in KB",                   value=float(data.get("mem_total", 0)))
         yield GaugeMetricFamily("router_mem_free",                "Free memory in KB",                    value=float(data.get("mem_free", 0)))
         yield GaugeMetricFamily("router_cpu_usage",               "CPU usage percentage",                 value=float(data.get("cpu_usage", 0)))
-        yield CounterMetricFamily("router_pon_bytes_sent",         "PON bytes sent",                       value=float(data.get("ponBytesSent", 0)))
+        yield CounterMetricFamily("router_pon_bytes_sent",        "PON bytes sent",                       value=float(data.get("ponBytesSent", 0)))
         yield CounterMetricFamily("router_pon_bytes_received",    "PON bytes received",                   value=float(data.get("ponBytesReceived", 0)))
         yield CounterMetricFamily("router_pon_packets_sent",      "PON packets sent",                     value=float(data.get("ponPacketsSent", 0)))
         yield CounterMetricFamily("router_pon_packets_received",  "PON packets received",                 value=float(data.get("ponPacketsReceived", 0)))
-        yield GaugeMetricFamily("router_tx_power",                "TX power level",                       value=float(data.get("txpower", 0)))
-        yield GaugeMetricFamily("router_rx_power",                "RX power level",                       value=float(data.get("rxpower", 0)))
+        yield GaugeMetricFamily("router_tx_power",                "TX power level in dBm",                value=float(data.get("txpower", 0)))
+        yield GaugeMetricFamily("router_rx_power",                "RX power level in dBm",                value=float(data.get("rxpower", 0)))
         yield GaugeMetricFamily("router_transceiver_temperature", "Transceiver temperature in Celsius",   value=float(data.get("transceivertemperature", 0)))
+
+        # ── New base_info metrics (no extra HTTP call) ────────────────────────
+        yield GaugeMetricFamily("router_supply_voltage",          "SFP transceiver supply voltage in V",  value=float(data.get("supplyvottage", 0)))
+        yield GaugeMetricFamily("router_bias_current",            "SFP laser bias current in mA",         value=float(data.get("biascurrent", 0)))
+        yield GaugeMetricFamily("router_flash_usage",             "Flash storage usage percentage",       value=float(data.get("flash_usage", 0)))
+        yield GaugeMetricFamily("router_pon_reg_state",           "PON registration state (5=registered)", value=float(data.get("pon_reg_state", 0)))
+
+        info_metric = GaugeMetricFamily(
+            "router_info", "Router device information",
+            labels=["model", "firmware", "hardware", "serial", "manufacturer"],
+        )
+        info_metric.add_metric(
+            [
+                data.get("ModelName", ""),
+                data.get("SoftwareVersion", ""),
+                data.get("HardwareVersion", ""),
+                data.get("SerialNumber", ""),
+                data.get("Manufacturer", ""),
+            ],
+            1.0,
+        )
+        yield info_metric
+
+        # ── Ethernet port metrics ─────────────────────────────────────────────
+        port_up      = GaugeMetricFamily("router_ethernet_port_up",              "Ethernet port link state (1=Up)",         labels=["port"])
+        port_uptime  = GaugeMetricFamily("router_ethernet_port_uptime_seconds",  "Ethernet port connection time in seconds", labels=["port"])
+        eth_tx       = CounterMetricFamily("router_ethernet_bytes_sent",         "Ethernet port bytes sent",                labels=["port"])
+        eth_rx       = CounterMetricFamily("router_ethernet_bytes_received",     "Ethernet port bytes received",            labels=["port"])
+        eth_tx_pkts  = CounterMetricFamily("router_ethernet_packets_sent",       "Ethernet port packets sent",              labels=["port"])
+        eth_rx_pkts  = CounterMetricFamily("router_ethernet_packets_received",   "Ethernet port packets received",          labels=["port"])
+        eth_errors   = CounterMetricFamily("router_ethernet_errors_received",    "Ethernet port receive errors",            labels=["port"])
+
+        for port in fetch_ethernet_ports():
+            p = str(port.get("ethernet_ports_index", "?"))
+            port_up.add_metric([p],     1.0 if port.get("Status") == "Up" else 0.0)
+            port_uptime.add_metric([p], float(port.get("X_FH_ConnetTime", 0)))
+            eth_tx.add_metric([p],      float(port.get("BytesSent", 0)))
+            eth_rx.add_metric([p],      float(port.get("BytesReceived", 0)))
+            eth_tx_pkts.add_metric([p], float(port.get("PacketsSent", 0)))
+            eth_rx_pkts.add_metric([p], float(port.get("PacketsReceived", 0)))
+            eth_errors.add_metric([p],  float(port.get("ErrorsReceived", 0)))
+
+        yield port_up
+        yield port_uptime
+        yield eth_tx
+        yield eth_rx
+        yield eth_tx_pkts
+        yield eth_rx_pkts
+        yield eth_errors
+
+        # ── WAN metrics ───────────────────────────────────────────────────────
+        wan_connected = GaugeMetricFamily("router_wan_connected",       "WAN connection state (1=Connected)", labels=["wan_name"])
+        wan_uptime    = GaugeMetricFamily("router_wan_uptime_seconds",  "WAN connection uptime in seconds",   labels=["wan_name"])
+
+        for wan in fetch_wan_info():
+            name = wan.get("Name", str(wan.get("wan_index", "?")))
+            wan_connected.add_metric([name], 1.0 if wan.get("ConnectionStatus") == "Connected" else 0.0)
+            wan_uptime.add_metric([name],    float(wan.get("Uptime", 0)))
+
+        yield wan_connected
+        yield wan_uptime
+
+        # ── LAN client count ──────────────────────────────────────────────────
+        client_count = fetch_lan_clients()
+        if client_count is not None:
+            yield GaugeMetricFamily("router_lan_connected_clients", "Number of active LAN clients", value=float(client_count))
 
 
 if __name__ == "__main__":
